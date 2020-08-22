@@ -1,0 +1,27 @@
+{
+  "name": "pounce-lang-parser",
+  "version": "1.0.0",
+  "description": "a Pounce parser",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx nearleyc src/pounce.ne -o build/pounce.js",
+    "test": "npx nearley-test test/test1.pounce build/pounce.js",
+    "rr": "npx nearley-railroad src/pounce.ne -o build/pounce.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pounce-lang/parser.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pounce-lang/parser/issues"
+  },
+  "homepage": "https://github.com/pounce-lang/parser#readme",
+  "devDependencies": {
+    "nearley": "^2.19.5"
+  },
+  "dependencies": {
+    "moo": "^0.5.1"
+  }
+}
