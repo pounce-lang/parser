@@ -43,8 +43,8 @@ list -> "[" programList "]" {% ([_, items]) => {
 
 string -> plainStr | singleQuoteStr | doubleQuoteStr {% e => e[0] %}
 plainStr -> [a-zA-Z]:+ {% e => ({string: e[0].join("") }) %}
-singleQuoteStr -> "'" [a-zA-Z]:+ "'" {% ([_, e]) => ({string: `'${e[0]}'` }) %}
-doubleQuoteStr -> "\"" [a-zA-Z]:+ "\"" {% ([_, e]) => ({string: `"${e[0]}"` }) %}
+singleQuoteStr -> "'" [a-zA-Z]:+ "'" {% ([_, e]) => ({string: `'${e.join("")}'` }) %}
+doubleQuoteStr -> "\"" [a-zA-Z]:+ "\"" {% ([_, e]) => ({string: `"${e.join("")}"` }) %}
 
 number -> "-":? [0-9]:+ ("." [0-9]:+):? {% (a) => {
 	const sign = a[0] ? a[0] : "";
