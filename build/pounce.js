@@ -40,10 +40,29 @@ var grammar = {
             }
             return {moreWords: "unexpected", terms}
         } },
-    {"name": "list", "symbols": [{"literal":"["}, "programList", {"literal":"]"}], "postprocess": ([_, items]) => ({list:items.filter(i => i !== null)})},
-    {"name": "string$ebnf$1", "symbols": [/[a-zA-Z]/]},
-    {"name": "string$ebnf$1", "symbols": ["string$ebnf$1", /[a-zA-Z]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "string", "symbols": ["string$ebnf$1"], "postprocess": e => ({string: e[0].join("") })},
+    {"name": "list", "symbols": [{"literal":"["}, "programList", {"literal":"]"}], "postprocess":  ([_, items]) => {
+            const list = items.filter(i => i !== null);
+            if (list && list.length) {
+                if (list[0].length) {
+                    const head = list.shift();
+                    return {list: [head[0], ...list]};
+                }
+                return {list};
+            }
+            return {list}
+        } },
+    {"name": "string", "symbols": ["plainStr"]},
+    {"name": "string", "symbols": ["singleQuoteStr"]},
+    {"name": "string", "symbols": ["doubleQuoteStr"], "postprocess": e => e[0]},
+    {"name": "plainStr$ebnf$1", "symbols": [/[a-zA-Z]/]},
+    {"name": "plainStr$ebnf$1", "symbols": ["plainStr$ebnf$1", /[a-zA-Z]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "plainStr", "symbols": ["plainStr$ebnf$1"], "postprocess": e => ({string: e[0].join("") })},
+    {"name": "singleQuoteStr$ebnf$1", "symbols": [/[a-zA-Z]/]},
+    {"name": "singleQuoteStr$ebnf$1", "symbols": ["singleQuoteStr$ebnf$1", /[a-zA-Z]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "singleQuoteStr", "symbols": [{"literal":"'"}, "singleQuoteStr$ebnf$1", {"literal":"'"}], "postprocess": ([_, e]) => ({string: `'${e[0]}'` })},
+    {"name": "doubleQuoteStr$ebnf$1", "symbols": [/[a-zA-Z]/]},
+    {"name": "doubleQuoteStr$ebnf$1", "symbols": ["doubleQuoteStr$ebnf$1", /[a-zA-Z]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "doubleQuoteStr", "symbols": [{"literal":"\""}, "doubleQuoteStr$ebnf$1", {"literal":"\""}], "postprocess": ([_, e]) => ({string: `"${e[0]}"` })},
     {"name": "number$ebnf$1", "symbols": [{"literal":"-"}], "postprocess": id},
     {"name": "number$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "number$ebnf$2", "symbols": [/[0-9]/]},
