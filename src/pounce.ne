@@ -1,37 +1,41 @@
-#@{%
-
-#const moo = require('moo')
-
-#let lexer = moo.compile({
-#    space: {match: /\s+/, lineBreaks: true},
-#    number: /-?(?:[0-9]|[1-9][0-9]+)(?:\.[0-9]+)?(?:[eE][-+]?[0-9]+)?\b/,
-#    string: /"(?:\\["bfnrt\/\\]|\\u[a-fA-F0-9]{4}|[^"\\])*"/,
-#    '{': '{',
-#    '}': '}',
-#    '[': '[',
-#    ']': ']',
-#    ',': ',',
-#    ':': ':',
-#    true: 'true',
-#    false: 'false',
-#})
-
-#%}
-
-# @lexer lexer
-
-
 ## paste into https://omrelli.ug/nearley-playground/
-pounce -> optS value:? optValue2 optS
+
+pounce -> programList {% (pl) => {
+    return {pounce : pl[0].filter(i => i !== null) };
+ } %}
+programList -> optS | optS word moreWords:* optS {% ([_, f, r]) => {
+    if (f && f.length) {
+        return [...f, ...r];
+    } 
+    return [f, ...r];
+    } %}
 
 optS -> " ":* {% () => null %}
-reqS -> " " {% () => null %}
+reqS -> " ":+ {% () => null %}
 
-value -> number | word | list {% (item) => item[0] %}
-optValue2 -> ( reqS optS value optS ):* {% (terms) => terms[0].map((e) => (e)) %}
+word -> number | string | list {% ([word]) => {
+    if(word && word.word) {
+        return word;
+    }
+    return word;
+} %}
+moreWords -> reqS word optS {% ([_, terms]) => {
+    if (terms && terms.length) {
+        return terms[0];
+    }
+    if (terms && terms.list) {
+        return terms;
+    }
+    return {moreWords: "unexpected", terms}
+} %}
 
-list -> "[" pounce "]" {% ([a, item, b]) => ({list:[...item]}) %}
+list -> "[" programList "]" {% ([_, items]) => ({list:items.filter(i => i !== null)}) %}
 
-word -> "a"
+string -> [a-zA-Z]:+ {% e => ({string: e[0].join("") }) %}
 
-number -> "5"
+number -> "-":? [0-9]:+ ("." [0-9]:+):? {% (a) => {
+	const sign = a[0] ? a[0] : "";
+	const decimal = a[1].join("");
+	const metisa = a[2]? "." + a[2][1] : "";
+	return {number: sign + decimal + metisa };
+} %}
