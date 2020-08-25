@@ -5,9 +5,12 @@ const pinna = require("../build/pounce");
 const parser = new nearley.Parser(nearley.Grammar.fromCompiled(pinna));
 
 let parser_tests = [
-    ['hello world', [ { string: 'hello' }, { string: 'world' } ]],
-    ['helloworld', [ { string: 'helloworld' } ]],
-    ['"hello world"', [ { string: '"hello world"' } ]],
+    ['hello world', ['hello', 'world']],
+    ['helloworld', [ 'helloworld' ]],
+    ["'hello world'", [ "'hello world'" ]],
+    ['"hello world"', [ '"hello world"' ]],
+    ["' '", [ "' '" ]],
+    ['" "', [ '" "' ]],
     // ['"+"', ['+']],
     // ['4 "+"', [4, '+']],
     // ['[m x * b + "=" m ["*"] x "+ " b]', 

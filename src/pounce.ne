@@ -18,8 +18,8 @@ optS -> " ":* {% () => null %}
 reqS -> " ":+ {% () => null %}
 
 word -> number | string | list {% ([word]) => {
-    if(word && word.word) {
-        return word.word;
+    if (typeof word === 'string') {
+        return word;
     }
     return word[0];
 } %}
@@ -45,10 +45,15 @@ list -> "[" programList "]" {% ([_, items]) => {
     return {list}
 } %}
 
-string -> plainStr | singleQuoteStr | doubleQuoteStr {% e => e[0] %}
-plainStr -> [a-zA-Z]:+ {% e => ({string: e[0].join("") }) %}
-singleQuoteStr -> "'" [\"\'\sa-zA-Z]:+ "'" {% ([_, e]) => ({string: `'${e.join("")}'` }) %}
-doubleQuoteStr -> "\"" [\"\'\sa-zA-Z]:+ "\"" {% ([_, e]) => ({string: `"${e.join("")}"` }) %}
+string -> plainStr 
+    | singleQuoteStr 
+    | doubleQuoteStr 
+
+plainStr -> [a-zA-Z]:+ {% e => (e[0].join("") ) %}
+
+singleQuoteStr -> "'" [\sa-zA-Z]:+ "'" {% ([_, e]) => ( `'${e.join("")}'` ) %}
+
+doubleQuoteStr -> "\"" [\sa-zA-Z]:+ "\"" {% ([_, e]) => ( `"${e.join("")}"` ) %}
 
 number -> "-":? [0-9]:+ ("." [0-9]:+):? {% (a) => {
 	const sign = a[0] ? a[0] : "";
