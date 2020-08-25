@@ -4,10 +4,14 @@ pounce -> programList {% (pl) => {
     return {pounce : pl[0].filter(i => i !== null) };
  } %}
 programList -> optS | optS word moreWords:* optS {% ([_, f, r]) => {
+    const rest = r.length && r[0].length ? r[0] : r;
     if (f && f.length) {
-        return [...f, ...r];
+        if (f[0] && f[0].length) {
+            return [...f[0], ...rest];
+        }
+        return [...f, ...rest];
     } 
-    return [f, ...r];
+    return [f, ...rest];
     } %}
 
 optS -> " ":* {% () => null %}
@@ -15,11 +19,11 @@ reqS -> " ":+ {% () => null %}
 
 word -> number | string | list {% ([word]) => {
     if(word && word.word) {
-        return word;
+        return word.word;
     }
-    return word;
+    return word[0];
 } %}
-moreWords -> reqS word optS {% ([_, terms]) => {
+moreWords -> reqS word {% ([_, terms]) => {
     if (terms && terms.length) {
         return terms[0];
     }
@@ -43,8 +47,8 @@ list -> "[" programList "]" {% ([_, items]) => {
 
 string -> plainStr | singleQuoteStr | doubleQuoteStr {% e => e[0] %}
 plainStr -> [a-zA-Z]:+ {% e => ({string: e[0].join("") }) %}
-singleQuoteStr -> "'" [a-zA-Z]:+ "'" {% ([_, e]) => ({string: `'${e.join("")}'` }) %}
-doubleQuoteStr -> "\"" [a-zA-Z]:+ "\"" {% ([_, e]) => ({string: `"${e.join("")}"` }) %}
+singleQuoteStr -> "'" [\"\'\sa-zA-Z]:+ "'" {% ([_, e]) => ({string: `'${e.join("")}'` }) %}
+doubleQuoteStr -> "\"" [\"\'\sa-zA-Z]:+ "\"" {% ([_, e]) => ({string: `"${e.join("")}"` }) %}
 
 number -> "-":? [0-9]:+ ("." [0-9]:+):? {% (a) => {
 	const sign = a[0] ? a[0] : "";
