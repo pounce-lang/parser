@@ -3,10 +3,20 @@
 pounce -> programList {% (pl) => {
     return {pounce : pl[0].filter(i => i !== null) };
  } %}
-programList -> optS | optS word moreWords:* optS {% ([_, f, r]) => {
-    const rest = r.length && r[0].length ? r[0] : r;
+programList -> optS | optS word anotherWord:* optS {% ([_, f, r]) => {
+    //let debug_rest = "a";
+    let rest = r.map(ele => {
+        if (ele.length && typeof ele !== 'string') {
+            return ele[0];
+        }
+        return ele;
+    });
+    // if (rest.length && rest[0].length) {
+    // //    debug_rest = "b";
+    //     rest = r.map(ele => ele[0]);
+    // }
     if (f && f.length) {
-        if (f[0] && f[0].length) {
+        if (f[0].length) {
             return [...f[0], ...rest];
         }
         return [...f, ...rest];
@@ -21,16 +31,19 @@ word -> number | string | list {% ([word]) => {
     if (typeof word === 'string') {
         return word;
     }
+    if (word.list) {
+        return [[word.list]];
+    }
     return word[0];
 } %}
-moreWords -> reqS word {% ([_, terms]) => {
+anotherWord -> reqS word {% ([_, terms]) => {
     if (terms && terms.length) {
         return terms[0];
     }
     if (terms && terms.list) {
         return terms;
     }
-    return {moreWords: "unexpected", terms}
+    return {anotherWord: "unexpected", terms}
 } %}
 
 list -> "[" programList "]" {% ([_, items]) => {
@@ -49,15 +62,15 @@ string -> plainStr
     | singleQuoteStr 
     | doubleQuoteStr 
 
-plainStr -> [a-zA-Z]:+ {% e => (e[0].join("") ) %}
+plainStr -> [a-zA-Z\~\!\@\#\$\%\^\&\*\-\_\=\+\/\\\?\.\,\<\>\;\:]:+ {% ([e]) => ( `${e.join("")}` ) %}
 
-singleQuoteStr -> "'" [\sa-zA-Z]:+ "'" {% ([_, e]) => ( `'${e.join("")}'` ) %}
+singleQuoteStr -> "'"  ([\sa-zA-Z0-9\"\`\~\!\@\#\$\%\^\&\*\-\_\=\+\/\\\?\.\,\<\>\;\:] | "\\'"):* "'" {% ([_, e]) => ( `'${e.join("")}'` ) %}
 
-doubleQuoteStr -> "\"" [\sa-zA-Z]:+ "\"" {% ([_, e]) => ( `"${e.join("")}"` ) %}
+doubleQuoteStr -> "\"" ([\sa-zA-Z0-9\'\`\~\!\@\#\$\%\^\&\*\-\_\=\+\/\\\?\.\,\<\>\;\:] | "\\\""):* "\"" {% ([_, e]) => ( `"${e.join("")}"` ) %}
 
 number -> "-":? [0-9]:+ ("." [0-9]:+):? {% (a) => {
 	const sign = a[0] ? a[0] : "";
 	const decimal = a[1].join("");
 	const metisa = a[2]? "." + a[2][1] : "";
-	return {number: sign + decimal + metisa };
+	return parseFloat( sign + decimal + metisa );
 } %}

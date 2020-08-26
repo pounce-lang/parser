@@ -10,11 +10,21 @@ var grammar = {
         } },
     {"name": "programList", "symbols": ["optS"]},
     {"name": "programList$ebnf$1", "symbols": []},
-    {"name": "programList$ebnf$1", "symbols": ["programList$ebnf$1", "moreWords"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "programList$ebnf$1", "symbols": ["programList$ebnf$1", "anotherWord"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "programList", "symbols": ["optS", "word", "programList$ebnf$1", "optS"], "postprocess":  ([_, f, r]) => {
-        const rest = r.length && r[0].length ? r[0] : r;
+        //let debug_rest = "a";
+        let rest = r.map(ele => {
+            if (ele.length && typeof ele !== 'string') {
+                return ele[0];
+            }
+            return ele;
+        });
+        // if (rest.length && rest[0].length) {
+        // //    debug_rest = "b";
+        //     rest = r.map(ele => ele[0]);
+        // }
         if (f && f.length) {
-            if (f[0] && f[0].length) {
+            if (f[0].length) {
                 return [...f[0], ...rest];
             }
             return [...f, ...rest];
@@ -33,16 +43,19 @@ var grammar = {
             if (typeof word === 'string') {
                 return word;
             }
+            if (word.list) {
+                return [[word.list]];
+            }
             return word[0];
         } },
-    {"name": "moreWords", "symbols": ["reqS", "word"], "postprocess":  ([_, terms]) => {
+    {"name": "anotherWord", "symbols": ["reqS", "word"], "postprocess":  ([_, terms]) => {
             if (terms && terms.length) {
                 return terms[0];
             }
             if (terms && terms.list) {
                 return terms;
             }
-            return {moreWords: "unexpected", terms}
+            return {anotherWord: "unexpected", terms}
         } },
     {"name": "list", "symbols": [{"literal":"["}, "programList", {"literal":"]"}], "postprocess":  ([_, items]) => {
             const list = items.filter(i => i !== null);
@@ -58,14 +71,20 @@ var grammar = {
     {"name": "string", "symbols": ["plainStr"]},
     {"name": "string", "symbols": ["singleQuoteStr"]},
     {"name": "string", "symbols": ["doubleQuoteStr"]},
-    {"name": "plainStr$ebnf$1", "symbols": [/[a-zA-Z]/]},
-    {"name": "plainStr$ebnf$1", "symbols": ["plainStr$ebnf$1", /[a-zA-Z]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "plainStr", "symbols": ["plainStr$ebnf$1"], "postprocess": e => (e[0].join("") )},
-    {"name": "singleQuoteStr$ebnf$1", "symbols": [/[\sa-zA-Z]/]},
-    {"name": "singleQuoteStr$ebnf$1", "symbols": ["singleQuoteStr$ebnf$1", /[\sa-zA-Z]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "plainStr$ebnf$1", "symbols": [/[a-zA-Z\~\!\@\#\$\%\^\&\*\-\_\=\+\/\\\?\.\,\<\>\;\:]/]},
+    {"name": "plainStr$ebnf$1", "symbols": ["plainStr$ebnf$1", /[a-zA-Z\~\!\@\#\$\%\^\&\*\-\_\=\+\/\\\?\.\,\<\>\;\:]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "plainStr", "symbols": ["plainStr$ebnf$1"], "postprocess": ([e]) => ( `${e.join("")}` )},
+    {"name": "singleQuoteStr$ebnf$1", "symbols": []},
+    {"name": "singleQuoteStr$ebnf$1$subexpression$1", "symbols": [/[\sa-zA-Z0-9\"\`\~\!\@\#\$\%\^\&\*\-\_\=\+\/\\\?\.\,\<\>\;\:]/]},
+    {"name": "singleQuoteStr$ebnf$1$subexpression$1$string$1", "symbols": [{"literal":"\\"}, {"literal":"'"}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "singleQuoteStr$ebnf$1$subexpression$1", "symbols": ["singleQuoteStr$ebnf$1$subexpression$1$string$1"]},
+    {"name": "singleQuoteStr$ebnf$1", "symbols": ["singleQuoteStr$ebnf$1", "singleQuoteStr$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "singleQuoteStr", "symbols": [{"literal":"'"}, "singleQuoteStr$ebnf$1", {"literal":"'"}], "postprocess": ([_, e]) => ( `'${e.join("")}'` )},
-    {"name": "doubleQuoteStr$ebnf$1", "symbols": [/[\sa-z]/]},
-    {"name": "doubleQuoteStr$ebnf$1", "symbols": ["doubleQuoteStr$ebnf$1", /[\sa-z]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "doubleQuoteStr$ebnf$1", "symbols": []},
+    {"name": "doubleQuoteStr$ebnf$1$subexpression$1", "symbols": [/[\sa-zA-Z0-9\'\`\~\!\@\#\$\%\^\&\*\-\_\=\+\/\\\?\.\,\<\>\;\:]/]},
+    {"name": "doubleQuoteStr$ebnf$1$subexpression$1$string$1", "symbols": [{"literal":"\\"}, {"literal":"\""}], "postprocess": function joiner(d) {return d.join('');}},
+    {"name": "doubleQuoteStr$ebnf$1$subexpression$1", "symbols": ["doubleQuoteStr$ebnf$1$subexpression$1$string$1"]},
+    {"name": "doubleQuoteStr$ebnf$1", "symbols": ["doubleQuoteStr$ebnf$1", "doubleQuoteStr$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "doubleQuoteStr", "symbols": [{"literal":"\""}, "doubleQuoteStr$ebnf$1", {"literal":"\""}], "postprocess": ([_, e]) => ( `"${e.join("")}"` )},
     {"name": "number$ebnf$1", "symbols": [{"literal":"-"}], "postprocess": id},
     {"name": "number$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
@@ -80,7 +99,7 @@ var grammar = {
         	const sign = a[0] ? a[0] : "";
         	const decimal = a[1].join("");
         	const metisa = a[2]? "." + a[2][1] : "";
-        	return {number: sign + decimal + metisa };
+        	return parseFloat( sign + decimal + metisa );
         } }
 ]
   , ParserStart: "pounce"

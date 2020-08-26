@@ -9,12 +9,26 @@ let parser_tests = [
     ['helloworld', [ 'helloworld' ]],
     ["'hello world'", [ "'hello world'" ]],
     ['"hello world"', [ '"hello world"' ]],
+    ['a b c d', [ 'a', 'b', 'c', 'd' ]],
     ["' '", [ "' '" ]],
     ['" "', [ '" "' ]],
-    // ['"+"', ['+']],
-    // ['4 "+"', [4, '+']],
-    // ['[m x * b + "=" m ["*"] x "+ " b]', 
-    //     [ [ 'm', 'x', '*', 'b', '+', '=', 'm', ['*'], 'x', '+ ', 'b' ] ]],
+    ["''", [ "''" ]],
+    ['""', [ '""' ]],
+    ['" " " in the middle " " "', [ '" "', '" in the middle "', '" "' ]],
+    ['"\\\""', [ '"\\\""' ]],
+    ["'\\\''", [ "'\\\''" ]],
+    ['"\'"', [ '"\'"' ]],
+    ["'\"'", [ "'\"'" ]],
+    ['"A \\"Quote\\" is good" dup', [ '"A \\"Quote\\" is good"', 'dup' ]],
+    ['+', ['+']],
+    ['"+"', ['"+"']],
+    ['4 7 1 9 "+" "+" "+"', [4, 7, 1, 9, '"+"', '"+"', '"+"']],
+    ['4 7 1 9 + + + ', [4, 7, 1, 9, '+', '+', '+']],
+    ['4 4 ++', [4, 4, '++']],
+    ['4 4 ++ ++ 7 ++', [4, 4, '++', '++', 7, '++']],
+    ['[+]', [['+']]],
+    ['[m x * b + = m [*] x + b]', 
+         [ [ 'm', 'x', '*', 'b', '+', '=', 'm', ['*'], 'x', '+', 'b' ] ]],
     // [`
     // # y = mx + b
     // 4 0 .5 [m b x] [m x * b + 
@@ -25,13 +39,13 @@ let parser_tests = [
     //     [ 'm', 'b', 'x' ],
     //     [ 'm', 'x', '*', 'b', '+', ' =', 'm', '*', 'x', '+ ', 'b' ],
     //     'pounce' ]],
-    // ['abc compose eee ', ['abc', 'compose', 'eee']],
-    // [' abc compose  eee ', ['abc', 'compose', 'eee']],
-    // ['"abc compose" "123 456"', ['abc compose', "123 456"]],
-    // ['abc "compose" "123 " 456', ['abc', 'compose', "123 ", 456]],
-    // ['5.5 2.1 + 456', [5.5, 2.1, '+', 456]],
-    // ['[5.5 2.1] .456 +', [[5.5, 2.1], 0.456, '+']],
-    // ['[[5.5 2.1] [1 2 3]] .456 +', [[[5.5, 2.1], [1, 2, 3]], 0.456, '+']],
+    ['abc compose eee ', ['abc', 'compose', 'eee']],
+    [' abc compose  eee ', ['abc', 'compose', 'eee']],
+    ['"abc compose" "123 456"', ['"abc compose"', '"123 456"']],
+    ['abc "compose" "123 " 456', ['abc', '"compose"', '"123 "', 456]],
+    ['5.5 2.1 + 456', [5.5, 2.1, '+', 456]],
+    ['[5.5 2.1] .456 +', [[5.5, 2.1], 0.456, '+']],
+    ['[[5.5 2.1] [1 2 3]] .456 +', [[[5.5, 2.1], [1, 2, 3]], 0.456, '+']],
     // [' [ [5.5 2.1]  [1 2 3] ]  .456  +   ', [[[5.5, 2.1], [1, 2, 3]], 0.456, '+']],
     // ['[["5.5" 2.1] [1 "2" 3]] .456 +', [[['5.5', 2.1], [1, '2', 3]], 0.456, '+']],
     // [' [ ["5.5" 2.1]  [1 "2" "3 3"] ]  .456  +   ', [[['5.5', 2.1], [1, '2', '3 3']], 0.456, '+']],
@@ -81,7 +95,7 @@ let testCount = 0;
 let testsFailed = 0;
 parser_tests.forEach((test, i) => {
     const ps = test[0];
-    const expected_stack = test[1];
+    const expected_pl = test[1];
 
     // console.log(`starting parse test for: '${ps}'`);
     try {
@@ -94,9 +108,9 @@ parser_tests.forEach((test, i) => {
         }
         const result_pl = parser.results[0].pounce;
         testCount += 1;
-        if (!deepCompare(result_pl, expected_stack)) {
+        if (!deepCompare(result_pl, expected_pl)) {
             testsFailed += 1;
-            console.log(result_pl, ' expected:', expected_stack);
+            console.log(`got this ${JSON.stringify(result_pl, null, " ")} but expected ${JSON.stringify(expected_pl, null, " ")}`);
             console.log('---- Failed parse test for: ', ps);
             parser_tests[i][2] = false;
             parser_tests[i][3] = result_pl;
