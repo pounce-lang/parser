@@ -47,22 +47,19 @@ anotherWord -> reqS word {% ([_, terms]) => {
 } %}
 
 list -> "[" programList "]" {% ([_, items]) => {
-    const list = items.filter(i => i !== null);
-    if (list && list.length) {
-        if (list[0].length) {
-            const head = list.shift();
-            return {list: [head[0], ...list]};
-        }
-        return {list};
-    }
-    return {list}
+    return {list: items};
 } %}
 
 string -> plainStr 
     | singleQuoteStr 
     | doubleQuoteStr 
 
-plainStr -> [a-zA-Z\~\!\@\#\$\%\^\&\*\-\_\=\+\/\\\?\.\,\<\>\;\:]:+ {% ([e]) => ( `${e.join("")}` ) %}
+plainStr -> [0-9]:* ([a-zA-Z\~\!\@\#\$\%\^\&\*\_\=\+\/\\\?\,\<\>\;\:] [0-9\-\.]:* ):+ {% ([pre, nonNum]) => {
+    const part2 = nonNum.map(ele => {
+        return ele[0] + ele[1].join("");
+    });
+    return `${pre.join("")}${part2.join("")}`;
+} %}
 
 singleQuoteStr -> "'"  ([\sa-zA-Z0-9\"\`\~\!\@\#\$\%\^\&\*\-\_\=\+\/\\\?\.\,\<\>\;\:] | "\\'"):* "'" {% ([_, e]) => ( `'${e.join("")}'` ) %}
 
