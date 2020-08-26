@@ -45,7 +45,7 @@ let parser_tests = [
     ['abc "compose" "123 " 456', ['abc', '"compose"', '"123 "', 456]],
     ['5.5 2.1 + 456', [5.5, 2.1, '+', 456]],
     ['[5.5 2.1] .456 +', [[5.5, 2.1], 0.456, '+']],
-    ['[[5.5 2.1] [1 2 3]] .456 +', [[[5.5, 2.1], [1, 2, 3]], 0.456, '+']],
+    // ['[[5.5 2.1] [1 2 3]] .456 +', [[[5.5, 2.1], [1, 2, 3]], 0.456, '+']],
     // [' [ [5.5 2.1]  [1 2 3] ]  .456  +   ', [[[5.5, 2.1], [1, 2, 3]], 0.456, '+']],
     // ['[["5.5" 2.1] [1 "2" 3]] .456 +', [[['5.5', 2.1], [1, '2', 3]], 0.456, '+']],
     // [' [ ["5.5" 2.1]  [1 "2" "3 3"] ]  .456  +   ', [[['5.5', 2.1], [1, '2', '3 3']], 0.456, '+']],
@@ -110,7 +110,7 @@ parser_tests.forEach((test, i) => {
         testCount += 1;
         if (!deepCompare(result_pl, expected_pl)) {
             testsFailed += 1;
-            console.log(`got this ${JSON.stringify(result_pl, null, " ")} but expected ${JSON.stringify(expected_pl, null, " ")}`);
+            console.log(`got this ${JSON.stringify(result_pl, null, "")} but expected ${JSON.stringify(expected_pl, null, "")}`);
             console.log('---- Failed parse test for: ', ps);
             parser_tests[i][2] = false;
             parser_tests[i][3] = result_pl;

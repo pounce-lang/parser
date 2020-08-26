@@ -68,9 +68,20 @@ singleQuoteStr -> "'"  ([\sa-zA-Z0-9\"\`\~\!\@\#\$\%\^\&\*\-\_\=\+\/\\\?\.\,\<\>
 
 doubleQuoteStr -> "\"" ([\sa-zA-Z0-9\'\`\~\!\@\#\$\%\^\&\*\-\_\=\+\/\\\?\.\,\<\>\;\:] | "\\\""):* "\"" {% ([_, e]) => ( `"${e.join("")}"` ) %}
 
-number -> "-":? [0-9]:+ ("." [0-9]:+):? {% (a) => {
-	const sign = a[0] ? a[0] : "";
-	const decimal = a[1].join("");
-	const metisa = a[2]? "." + a[2][1] : "";
-	return parseFloat( sign + decimal + metisa );
-} %}
+number    ->  float1 | float2 | float3 | integer
+
+float1    ->  "-":? [0-9]:+ "." [0-9]:+  {% ([minus, integ, dot, metisa]) => {
+      return parseFloat(minus? '-': '' + integ.join("") + dot + metisa.join(""));
+  } %}
+float2    ->  "-":? "." [0-9]:+  {% ([minus, dot, metisa]) => {
+      return parseFloat(minus? '-': '' + dot + metisa.join(""));
+  } %}
+
+float3    ->  "-":? [0-9]:+ "."  {% ([minus, integ, dot]) => {
+      return parseFloat(minus? '-': '' + integ.join("") + dot);
+  } %}
+
+integer   ->  "-":? [0-9]:+  {% ([minus, integ]) => {
+      return parseInt(minus? '-': '' + integ.join(""));
+  } %}
+

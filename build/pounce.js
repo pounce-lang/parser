@@ -86,20 +86,39 @@ var grammar = {
     {"name": "doubleQuoteStr$ebnf$1$subexpression$1", "symbols": ["doubleQuoteStr$ebnf$1$subexpression$1$string$1"]},
     {"name": "doubleQuoteStr$ebnf$1", "symbols": ["doubleQuoteStr$ebnf$1", "doubleQuoteStr$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "doubleQuoteStr", "symbols": [{"literal":"\""}, "doubleQuoteStr$ebnf$1", {"literal":"\""}], "postprocess": ([_, e]) => ( `"${e.join("")}"` )},
-    {"name": "number$ebnf$1", "symbols": [{"literal":"-"}], "postprocess": id},
-    {"name": "number$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "number$ebnf$2", "symbols": [/[0-9]/]},
-    {"name": "number$ebnf$2", "symbols": ["number$ebnf$2", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "number$ebnf$3$subexpression$1$ebnf$1", "symbols": [/[0-9]/]},
-    {"name": "number$ebnf$3$subexpression$1$ebnf$1", "symbols": ["number$ebnf$3$subexpression$1$ebnf$1", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "number$ebnf$3$subexpression$1", "symbols": [{"literal":"."}, "number$ebnf$3$subexpression$1$ebnf$1"]},
-    {"name": "number$ebnf$3", "symbols": ["number$ebnf$3$subexpression$1"], "postprocess": id},
-    {"name": "number$ebnf$3", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "number", "symbols": ["number$ebnf$1", "number$ebnf$2", "number$ebnf$3"], "postprocess":  (a) => {
-        	const sign = a[0] ? a[0] : "";
-        	const decimal = a[1].join("");
-        	const metisa = a[2]? "." + a[2][1] : "";
-        	return parseFloat( sign + decimal + metisa );
+    {"name": "number", "symbols": ["float1"]},
+    {"name": "number", "symbols": ["float2"]},
+    {"name": "number", "symbols": ["float3"]},
+    {"name": "number", "symbols": ["integer"]},
+    {"name": "float1$ebnf$1", "symbols": [{"literal":"-"}], "postprocess": id},
+    {"name": "float1$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "float1$ebnf$2", "symbols": [/[0-9]/]},
+    {"name": "float1$ebnf$2", "symbols": ["float1$ebnf$2", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "float1$ebnf$3", "symbols": [/[0-9]/]},
+    {"name": "float1$ebnf$3", "symbols": ["float1$ebnf$3", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "float1", "symbols": ["float1$ebnf$1", "float1$ebnf$2", {"literal":"."}, "float1$ebnf$3"], "postprocess":  ([minus, integ, dot, metisa]) => {
+            return parseFloat(minus? '-': '' + integ.join("") + dot + metisa.join(""));
+        } },
+    {"name": "float2$ebnf$1", "symbols": [{"literal":"-"}], "postprocess": id},
+    {"name": "float2$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "float2$ebnf$2", "symbols": [/[0-9]/]},
+    {"name": "float2$ebnf$2", "symbols": ["float2$ebnf$2", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "float2", "symbols": ["float2$ebnf$1", {"literal":"."}, "float2$ebnf$2"], "postprocess":  ([minus, dot, metisa]) => {
+            return parseFloat(minus? '-': '' + dot + metisa.join(""));
+        } },
+    {"name": "float3$ebnf$1", "symbols": [{"literal":"-"}], "postprocess": id},
+    {"name": "float3$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "float3$ebnf$2", "symbols": [/[0-9]/]},
+    {"name": "float3$ebnf$2", "symbols": ["float3$ebnf$2", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "float3", "symbols": ["float3$ebnf$1", "float3$ebnf$2", {"literal":"."}], "postprocess":  ([minus, integ, dot]) => {
+            return parseFloat(minus? '-': '' + integ.join("") + dot);
+        } },
+    {"name": "integer$ebnf$1", "symbols": [{"literal":"-"}], "postprocess": id},
+    {"name": "integer$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "integer$ebnf$2", "symbols": [/[0-9]/]},
+    {"name": "integer$ebnf$2", "symbols": ["integer$ebnf$2", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "integer", "symbols": ["integer$ebnf$1", "integer$ebnf$2"], "postprocess":  ([minus, integ]) => {
+            return parseInt(minus? '-': '' + integ.join(""));
         } }
 ]
   , ParserStart: "pounce"
