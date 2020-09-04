@@ -1,3 +1,9 @@
+(function () {
+    function id(x) { return x[0]; }
+
+
+
+
 const parse = s => {
     let ast = [];
     while (s && s.length) {
@@ -11,7 +17,6 @@ const consumeOne = (s, ast) => { return [s.slice(1), ast]; };
 const consumeComment = (s, ast) => {
     let i = 0;
     const s_len =  s.length;
-    console.log('.');
     while (s_len > i && s[i] !== '\n') {
         i += 1;
     } 
@@ -52,14 +57,12 @@ const parseAux = (s, ast) => {
     let s2 = s;
     const nwm_len = nonWordMap.length;
     while (s2.length) {
-        console.log(s2);
         let rule_i = 0;
         while(nwm_len > rule_i && s2[0] !== nonWordMap[rule_i][0]) {
             rule_i += 1;
         }
-        console.log(rule_i);
         if (nwm_len > rule_i) {
-            console.log("apply nonWord rule", "(", nonWordMap[rule_i][0], ")");
+            // console.log("apply nonWord rule", "(", nonWordMap[rule_i][0], ")");
             if (s2[0] === "]") {
                 // console.log("pop", [s, [...ast]])
                 return [s2.slice(1), ast];
@@ -71,4 +74,23 @@ const parseAux = (s, ast) => {
     return [s2, ast];
 };
 
-console.log(JSON.stringify(parse("a abc def # ghi jk\n abf [a]")));
+// console.log(JSON.stringify(parse("a abc def # ghi jk\n abf [a]")));
+
+
+
+
+
+
+// Generated automatically by nearley, version 2.19.5
+// http://github.com/Hardmath123/nearley
+
+var pouncer = parse;
+
+
+if (typeof module !== 'undefined'&& typeof module.exports !== 'undefined') {
+    module.exports = pouncer;
+} else {
+    window.pouncer = pouncer;
+}
+})();
+
