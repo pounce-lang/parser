@@ -2,7 +2,7 @@
     function id(x) { return x[0]; }
 
 
-
+let escapeStack = [];
 
 const parse = s => {
     let ast = [];
@@ -22,11 +22,22 @@ const consumeComment = (s, ast) => {
     } 
     return [s.slice(i), ast];
 }
+
 const pushList = (s, ast) => {
+    escapeStack.push("]");
     const [s2, sub_ast] = parseAux(s.slice(1), []);
     ast.push(sub_ast);
     return [s2, ast];
 }
+
+const pushString = (s, ast) => {
+    const delim = s[0];
+    escapeStack.push(delim);
+    const [s2, sub_string] = parseString(s.slice(1), delim);
+    ast.push(sub_string);
+    return [s2, ast];
+}
+
 
 const nonWordMap = [
     ['#', consumeComment],
@@ -36,9 +47,31 @@ const nonWordMap = [
     ['\r', consumeOne], 
     ['[', pushList], 
     [']', null], 
-    // ['"', pushDblQtString], 
-    // ["'", pushSglQtString], 
+    ['"', pushString], 
+    ["'", pushString], 
 ];
+
+const parseString = (s, delim) => {    
+    let i = 0;
+    let esc = false;
+    s.length
+    while (s.length > i && (esc || s[i] !== delim) ) {
+        esc = false;
+        // console.log('*** s[i] ***', s[i]);
+        if (s[i] === '\\') {
+            // console.log("hi");
+            esc = true;
+        }
+        i += 1;
+    }
+    
+    found = s.slice(0, i);
+    // console.log('*** found ***', JSON.stringify(found));
+    if (i) {
+        return [s.slice(i), delim+found+delim];
+    }
+    return [s, delim+delim];
+};
 
 const parseWord = (s, ast) => {
     
@@ -63,8 +96,10 @@ const parseAux = (s, ast) => {
         }
         if (nwm_len > rule_i) {
             // console.log("apply nonWord rule", "(", nonWordMap[rule_i][0], ")");
-            if (s2[0] === "]") {
-                // console.log("pop", [s, [...ast]])
+            if (s2[0] === escapeStack[escapeStack.length-1]) {
+                
+                // console.log("pop", [s2, [...escapeStack]])
+                escapeStack.pop();
                 return [s2.slice(1), ast];
             }
             [s2, ast] = nonWordMap[rule_i][1](s2, ast);
