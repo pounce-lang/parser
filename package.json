@@ -4,7 +4,7 @@
   "description": "a Pounce parser",
   "main": "index.js",
   "scripts": {
-    "build": "npx nearleyc src/pounce.ne -o build/pounce.js",
+    "build": "",
     "test": "npx nearley-test build/pounce.js < test/test1.pounce",
     "rr": "npx nearley-railroad src/pounce.ne -o build/pounce.html"
   },
@@ -18,10 +18,9 @@
     "url": "https://github.com/pounce-lang/parser/issues"
   },
   "homepage": "https://github.com/pounce-lang/parser#readme",
-  "devDependencies": {
-    "nearley": "^2.19.5"
-  },
+  "devDependencies": {},
   "dependencies": {
-    "moo": "^0.5.1"
+    "@xstate/fsm": "^1.5.1",
+    "rollup": "^2.26.11"
   }
 }

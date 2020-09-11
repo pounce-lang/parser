@@ -25,8 +25,31 @@ const consumeComment = (s, ast) => {
 
 const pushList = (s, ast) => {
     escapeStack.push("]");
+    console.log("get sub-list ast");
     const [s2, sub_ast] = parseAux(s.slice(1), []);
+    console.log("got sub-ast", JSON.stringify(sub_ast));
     ast.push(sub_ast);
+    return [s2, ast];
+}
+
+const pushHash = (s, ast) => {
+    escapeStack.push("}");
+    const [s2, sub_ast] = parseKVPs(s.slice(1), {});
+    ast.push(sub_ast);
+    return [s2, ast];
+}
+
+const pushInfix = (s, ast) => {
+    escapeStack.push(")");
+    const [s2, sub_ast] = parseAux(s.slice(1), []);
+    ast.push({"_type":"infix", "infix": sub_ast});
+    return [s2, ast];
+}
+
+const pushType = (s, ast) => {
+    escapeStack.push(">");
+    const [s2, sub_ast] = parseAux(s.slice(1), []);
+    ast.push({"_type":"type", "type": sub_ast});
     return [s2, ast];
 }
 
@@ -47,8 +70,15 @@ const nonWordMap = [
     ['\r', consumeOne], 
     ['[', pushList], 
     [']', null], 
+    ['{', pushHash], 
+    ['}', null], 
+    ['(', pushInfix], 
+    [')', null], 
+    ['<', pushType], 
+    ['>', null], 
     ['"', pushString], 
     ["'", pushString], 
+    ["`", pushString], 
 ];
 
 const parseString = (s, delim) => {    
@@ -57,16 +87,16 @@ const parseString = (s, delim) => {
     s.length
     while (s.length > i && (esc || s[i] !== delim) ) {
         esc = false;
-        // console.log('*** s[i] ***', s[i]);
+        console.log('*** s[i] ***', JSON.stringify(s[i]));
         if (s[i] === '\\') {
-            // console.log("hi");
+            console.log("hi back slash");
             esc = true;
         }
         i += 1;
     }
     
     found = s.slice(0, i);
-    // console.log('*** found ***', JSON.stringify(found));
+    console.log('*** found ***', JSON.stringify(found));
     if (i) {
         return [s.slice(i), delim+found+delim];
     }
@@ -75,38 +105,58 @@ const parseString = (s, delim) => {
 
 const parseWord = (s, ast) => {
     
-    const regex = /^[^#\s\[\]\"\']+/;
+    const regex = /^[^#\s\[\]\"\'\`\{\}]+/;
     const found = s.match(regex);
     if (found && found.length ) {
-        // console.log(s, found[0]);
-        // console.log("ast", ast);
+        console.log("parseWord found ", JSON.stringify(s), JSON.stringify(found[0]));
         ast.push(found[0])
+        console.log("parseWord post ast", ast);
         return [s.slice(found[0].length), ast];
     }
     return [s.slice(0), ast];
 };
 
+const parseKVPs = (s, ast) => {
+    // TBD
+    return [s.slice(1), ast];
+};
+
+
 const parseAux = (s, ast) => {
     let s2 = s;
+    let ast2 = [...ast];
     const nwm_len = nonWordMap.length;
     while (s2.length) {
         let rule_i = 0;
-        while(nwm_len > rule_i && s2[0] !== nonWordMap[rule_i][0]) {
+        while(rule_i < nwm_len && s2[0] !== nonWordMap[rule_i][0]) {
             rule_i += 1;
         }
-        if (nwm_len > rule_i) {
-            // console.log("apply nonWord rule", "(", nonWordMap[rule_i][0], ")");
-            if (s2[0] === escapeStack[escapeStack.length-1]) {
+        if (rule_i < nwm_len) {
+            console.log("apply nonWord rule", "(", nonWordMap[rule_i][0], ")");
+            if (s2[0] === escapeStack[escapeStack.length-1] && nonWordMap[rule_i][1] === null) {
                 
-                // console.log("pop", [s2, [...escapeStack]])
-                escapeStack.pop();
-                return [s2.slice(1), ast];
+                console.log("pop", [s2, [...escapeStack]]);
+                const popped = escapeStack.pop();
+                if (popped === ']') {
+                    return [s2.slice(1), ast2];
+                }
+                else {
+                    console.log('*** tick ***');
+                    s2 = s2.slice(1);
+                    // return [s2.slice(1), ast2];
+                }
             }
-            [s2, ast] = nonWordMap[rule_i][1](s2, ast);
+            else {
+                [s2, ast2] = nonWordMap[rule_i][1](s2, ast2);
+            }
         }
-        [s2, ast] = parseWord(s2, ast);
+        else {
+            console.log("pre parseWord for ", s2, JSON.stringify(ast2));
+            [s2, ast2] = parseWord(s2, ast2);
+            console.log("post parseWord for ", s2, JSON.stringify(ast2));
+        }
     }
-    return [s2, ast];
+    return [s2, ast2];
 };
 
 // console.log(JSON.stringify(parse("a abc def # ghi jk\n abf [a]")));
