@@ -8,7 +8,9 @@
         id: 'parser',
         initial: 'outerList',
         context: {
-            s: `a   bcd ef `, i: 0
+            s: `  a   bcd ef `, i: 0,
+            currentWord: '',
+            ast: []
         },
         states: {
             outerList: {
@@ -22,20 +24,33 @@
                 }
             },
             word: {
-                entry: fsm.assign({ i: (ctx) => ctx.s[ctx.i] === ' ' ? ctx.i : ctx.i + 1 }),
+                entry: fsm.assign({ 
+                    currentWord: (ctx) => ctx.currentWord+ctx.s[ctx.i],
+                    i: (ctx) => ctx.s[ctx.i] === ' ' ? ctx.i : ctx.i + 1 
+                }),
                 on: {
-                  MORE_WORD: 'wordEtc',
-                    END_WORD: 'outerList',
+                    MORE_WORD: 'wordEtc',
+                    END_WORD: 'endWord',
                     EOF: 'eof'
                 }
             },
             wordEtc: {
-                entry: fsm.assign({ i: (ctx) => ctx.s[ctx.i] === ' ' ? ctx.i : ctx.i + 1 }),
+                entry: fsm.assign({
+                    currentWord: (ctx) => ctx.currentWord+ctx.s[ctx.i], 
+                    i: (ctx) => (ctx.i + 1)
+                }),
                 on: {
-                  MORE_WORD: 'word',
-                    END_WORD: 'outerList',
+                    MORE_WORD: { target: 'wordEtc', actions: () => fsm.assign({ i: (ctx) => (ctx.i + 1) })},
+                    END_WORD:'endWord',
                     EOF: 'eof'
                 }
+            },
+            endWord: {
+              entry: fsm.assign({ 
+                        ast: (ctx) => [...ctx.ast, ctx.currentWord],
+                        currentWord: () => ('') 
+                    }),
+                on: { 'WORD_REC': 'outerList' }
             },
             pushList: {
                 on: { END_LIST: 'outerList' }
@@ -70,7 +85,7 @@
     };
 
     toggleService.subscribe((state) => {
-        // console.log(JSON.stringify(state));
+        console.log(JSON.stringify(state.context), state.changed);
         const st = state.value;
         const { s, i } = state.context;
         if (state.changed !== false) {
@@ -95,26 +110,10 @@
             else if (st === 'ws') {
                 send(s[i], 'END_WS');
             }
+            else if (st === 'endWord') {
+                send(s[i], 'WORD_REC');
+            }
         }
     });
-
-
-    // send(s[i], 'START_WORD');
-    // // => logs 'active'
-
-    // send(s[i], 'END_WORD');
-
-    // send(s[i], 'START_WORD');
-    // // => logs 'active'
-
-    // send(s[i], 'END_WORD');
-
-
-    // send(s[i], 'START_LIST');
-    // // => logs 'inactive'
-    // send(s[i], 'IMMIDIATE');
-
-
-    // toggleService.stop();
 
 })));
