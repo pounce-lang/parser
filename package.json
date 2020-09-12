@@ -2,11 +2,10 @@
   "name": "pounce-lang-parser",
   "version": "1.0.0",
   "description": "a Pounce parser",
-  "main": "index.js",
+  "main": "pounce.js",
   "scripts": {
     "build": "",
-    "test": "npx nearley-test build/pounce.js < test/test1.pounce",
-    "rr": "npx nearley-railroad src/pounce.ne -o build/pounce.html"
+    "test": ""
   },
   "repository": {
     "type": "git",
