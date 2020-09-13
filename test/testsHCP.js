@@ -1,34 +1,34 @@
-const pinna = require("../src/pounce_2.js"); 
+const pinna = require("../bundle.js");
 
 
 let parser_tests = [
     [`a [+ " ="   m ] z`, ['a', ['+', '" ="', 'm'], 'z']],
-    // ['hello world', ['hello', 'world']],
-    // ['helloworld', [ 'helloworld' ]],
-    // ["'hello world'", [ "'hello world'" ]],
-    // ['"hello world"', [ '"hello world"' ]],
-    // ['a b c d', [ 'a', 'b', 'c', 'd' ]],
-    // ["' '", [ "' '" ]],
-    // ['" "', [ '" "' ]],
-    // ["''", [ "''" ]],
-    // ['""', [ '""' ]],
-    // ['" " " in the middle " " "', [ '" "', '" in the middle "', '" "' ]],
-    // ['"\\\""', [ '"\\\""' ]],
-    // ["'\\\''", [ "'\\\''" ]],
-    // ['"\'"', [ '"\'"' ]],
-    // ["'\"'", [ "'\"'" ]],
-    // ['"A \\"Quote\\" is good" dup', [ '"A \\"Quote\\" is good"', 'dup' ]],
-    // ['+', ['+']],
-    // ['"+"', ['"+"']],
-    // // // ['4 7 1 9 "+" "+" "+"', [4, 7, 1, 9, '"+"', '"+"', '"+"']],
-    // // ['4 7 1 9 + + + ', [4, 7, 1, 9, '+', '+', '+']],
-    // // ['4 4 ++', [4, 4, '++']],
-    // // ['4 4 ++ ++ 7 ++', [4, 4, '++', '++', 7, '++']],
-    // ['[+]', [['+']]],
-    // ['a ["+"] b', ['a', ['"+"'], "b"]],
-    // ['a ["\\\"+"] b', ['a', ['"\\\"+"'], "b"]],
-    // ['[m x * b + = m [*] x + b]', 
-    //      [ [ 'm', 'x', '*', 'b', '+', '=', 'm', ['*'], 'x', '+', 'b' ] ]],
+    ['hello world', ['hello', 'world']],
+    ['helloworld', [ 'helloworld' ]],
+    ["'hello world'", [ "'hello world'" ]],
+    ['"hello world"', [ '"hello world"' ]],
+    ['a b c d', [ 'a', 'b', 'c', 'd' ]],
+    ["' '", [ "' '" ]],
+    ['" "', [ '" "' ]],
+    ["''", [ "''" ]],
+    ['""', [ '""' ]],
+    ['" " " in the middle " " "', [ '" "', '" in the middle "', '" "' ]],
+    ['"\\\""', [ '"\\\""' ]],
+    ["'\\\''", [ "'\\\''" ]],
+    ['"\'"', [ '"\'"' ]],
+    ["'\"'", [ "'\"'" ]],
+    ['"A \\"Quote\\" is good" dup', [ '"A \\"Quote\\" is good"', 'dup' ]],
+    ['+', ['+']],
+    ['"+"', ['"+"']],
+    // // ['4 7 1 9 "+" "+" "+"', [4, 7, 1, 9, '"+"', '"+"', '"+"']],
+    // ['4 7 1 9 + + + ', [4, 7, 1, 9, '+', '+', '+']],
+    // ['4 4 ++', [4, 4, '++']],
+    // ['4 4 ++ ++ 7 ++', [4, 4, '++', '++', 7, '++']],
+    ['[+]', [['+']]],
+    ['a ["+"] b', ['a', ['"+"'], "b"]],
+    ['a ["\\\"+"] b', ['a', ['"\\\"+"'], "b"]],
+    ['[m x * b + = m [*] x + b]', 
+         [ [ 'm', 'x', '*', 'b', '+', '=', 'm', ['*'], 'x', '+', 'b' ] ]],
 
     //      [`
     // # y = mx + b
@@ -46,10 +46,10 @@ let parser_tests = [
     // # compose 
     // #eee `, ['abc']],
     // ['abc compose #eee ', ['abc', 'compose']],
-    // ['abc compose eee ', ['abc', 'compose', 'eee']],
-    // [' abc compose  eee ', ['abc', 'compose', 'eee']],
-    // ['"abc compose" "123 456"', ['"abc compose"', '"123 456"']],
-    // ['abc "compose" "123 " 456', ['abc', '"compose"', '"123 "', "456"]],
+    ['abc compose eee ', ['abc', 'compose', 'eee']],
+    [' abc compose  eee ', ['abc', 'compose', 'eee']],
+    ['"abc compose" "123 456"', ['"abc compose"', '"123 456"']],
+    ['abc "compose" "123 " 456', ['abc', '"compose"', '"123 "', "456"]],
     // // ['5.5 2.1 + 456', [5.5, 2.1, '+', 456]],
     // // ['[5.5 2.1] .456 +', [[5.5, 2.1], 0.456, '+']],
     // // ['[[5.5 2.1] [1 2 3]] .456 +', [[[5.5, 2.1], [1, 2, 3]], 0.456, '+']],
@@ -73,9 +73,9 @@ let parser_tests = [
     // // [' .5', [0.5]],
     // // [' .5 ', [0.5]],
     // // ['', []],
-    // // ['a [abc]', ['a', ['abc']]],
-    // // ['"1a1"', ['"1a1"']],
-    // // ['1a1', ["1a1"]],
+    ['a [abc]', ['a', ['abc']]],
+    ['"1a1"', ['"1a1"']],
+    ['1a1', ["1a1"]],
     // // // ['{a:[}', ["parse error"]],
     // // // ['true', [true]],
     // // // ['false true false true', [false, true, false, true]],
@@ -106,17 +106,23 @@ parser_tests.forEach((test, i) => {
 
     // console.log(`starting parse test for: '${ps}'`);
     try {
-        const [_, result_pl] = pinna(ps);
-        testCount += 1;
-        if (!deepCompare(result_pl, expected_pl)) {
-            testsFailed += 1;
-            console.log(`got this \n${JSON.stringify(result_pl, null, "")} \nbut expected \n${JSON.stringify(expected_pl, null, "")}`);
-            console.log('---- Failed parse test for: ', ps);
-            parser_tests[i][2] = false;
-            parser_tests[i][3] = result_pl;
+        const parseResult = pinna.parse(ps);
+        if (parseResult.success) {
+            const result_pl = parseResult.ast;
+            testCount += 1;
+            if (!deepCompare(result_pl, expected_pl)) {
+                testsFailed += 1;
+                console.log(`got this \n${JSON.stringify(result_pl, null, "")} \nbut expected \n${JSON.stringify(expected_pl, null, "")}`);
+                console.log('---- Failed parse test for: ', ps);
+                parser_tests[i][2] = false;
+                parser_tests[i][3] = result_pl;
+            }
+            else {
+                parser_tests[i][2] = true;
+            }
         }
         else {
-            parser_tests[i][2] = true;
+            console.log('---- input failed to parse: ', parseResult);
         }
     }
     catch (e) {
