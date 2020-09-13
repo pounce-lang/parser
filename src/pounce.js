@@ -24,7 +24,8 @@ export const parse = pounceSrc => {
                     START_LIST: 'pushList',
                     END_LIST: 'popList',
                     SPACE: 'space',
-                    EOF: 'eof'
+                    EOF: 'eof',
+                    COMMENT: 'comment'
                 }
             },
             word: {
@@ -138,6 +139,18 @@ export const parse = pounceSrc => {
                     EOF: 'eof'
                 }
             },
+            comment: {
+                entry: assign({
+                    i: ctx => ctx.i + 1,
+                    line: c => c.s[c.i] === '\n' ? c.line + 1 : c.line,
+                    colOffset: c => c.s[c.i] === '\n' ? c.i : c.colOffset
+                }),
+                on: {
+                    END_COMMENT: 'outerList',
+                    COMMENT: 'comment',
+                    EOF: 'eof'
+                }
+            },
             eof: {
                 entry: assign({
                     success: (c) => (c.ast.length === 1 && c.subListLevel === 0),
@@ -183,6 +196,16 @@ export const parse = pounceSrc => {
             // space
             else if (st === 'outerList' && (s[i] === " " || s[i] === "\n" || s[i] === "\t")) {
                 send(state.value, s[i], 'SPACE');
+            }
+            // comment
+            else if (st === 'outerList' && s[i] === "#") {
+                send(state.value, s[i], 'COMMENT');
+            }
+            else if (st === 'comment' && s[i] !== "\n") {
+                send(state.value, s[i], 'COMMENT');
+            }
+            else if (st === 'comment' && s[i] === "\n") {
+                send(state.value, s[i], 'END_COMMENT');
             }
             // word
             else if (st === 'outerList' && s[i] !== " " && s[i] !== "\t" && s[i] !== "\n" && s[i] !== "'" && s[i] !== "\"" && s[i] !== "`") {
