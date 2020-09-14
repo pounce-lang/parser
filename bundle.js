@@ -23,15 +23,42 @@
             states: {
                 outerList: {
                     on: {
+                        TRUE: 'true',
+                        FALSE: 'false',
                         START_WORD: 'word',
                         START_STRING: 'string',
                         START_LIST: 'pushList',
                         END_LIST: 'popList',
                         SPACE: 'space',
-                        EOF: 'eof',
-                        COMMENT: 'comment'
+                        COMMENT: 'comment',
+                        EOF: 'eof'
                     }
                 },
+                true: {
+                    entry: fsm.assign({
+                        i: ctx => ctx.i + 4,
+                        ast: (c) => {
+                            let level = c.subListLevel;
+                            let astLevel = c.ast[level];
+                            astLevel = [...astLevel, true];
+                            return [...c.ast.slice(0, -1), astLevel];
+                        }
+                    }),
+                    on: { BACK: 'outerList', EOF: 'eof' }
+                },
+                false: {
+                    entry: fsm.assign({
+                        i: ctx => ctx.i + 5,
+                        ast: (c) => {
+                            let level = c.subListLevel;
+                            let astLevel = c.ast[level];
+                            astLevel = [...astLevel, false];
+                            return [...c.ast.slice(0, -1), astLevel];
+                        }
+                    }),
+                    on: { BACK: 'outerList', EOF: 'eof' }
+                },
+
                 word: {
                     entry: fsm.assign({
                         currentWord: ctx => ctx.currentWord + ctx.s[ctx.i],
@@ -201,6 +228,15 @@
                 else if (st === 'outerList' && (s[i] === " " || s[i] === "\n" || s[i] === "\t")) {
                     send(state.value, s[i], 'SPACE');
                 }
+                // boolean
+                else if (st === 'outerList' && s.slice(i, i + 4) === "true" &&
+                    (i + 4 >= s.length || s[i + 4] === " " || s[i + 4] === "\n" || s[i + 4] === "\t" || s[i + 4] === "]")) {
+                    send(state.value, s[i], 'TRUE');
+                }
+                else if (st === 'outerList' && s.slice(i, i + 5) === "false" &&
+                    (i + 5 >= s.length || s[i + 5] === " " || s[i + 5] === "\n" || s[i + 5] === "\t" || s[i + 5] === "]")) {
+                    send(state.value, s[i], 'FALSE');
+                }
                 // comment
                 else if (st === 'outerList' && s[i] === "#") {
                     send(state.value, s[i], 'COMMENT');
@@ -250,12 +286,15 @@
                 else if (st === 'popList') {
                     send(state.value, s[i], 'BACK');
                 }
+                else if (st === 'true' || st === 'false') {
+                    send(state.value, s[i], 'BACK');
+                }
             }
             else {
-                return {ast, success};
+                return { ast, success };
             }
         });
-        return {ast: lastAst, success: lastSuccess};
+        return { ast: lastAst, success: lastSuccess };
     };
 
     exports.parse = parse;
