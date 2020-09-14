@@ -17,9 +17,10 @@
     "url": "https://github.com/pounce-lang/parser/issues"
   },
   "homepage": "https://github.com/pounce-lang/parser#readme",
-  "devDependencies": {},
-  "dependencies": {
-    "@xstate/fsm": "^1.5.1",
+  "devDependencies": {
     "rollup": "^2.26.11"
+  },
+  "dependencies": {
+    "@xstate/fsm": "^1.5.1"
   }
 }

@@ -4,6 +4,8 @@
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.pounceParser = {}, global.fsm));
 }(this, (function (exports, fsm) { 'use strict';
 
+    const isSpace = char => char === " " || char === "\n" || char === "\t";
+
     const parse = pounceSrc => {
 
         const parserMachine = fsm.createMachine({
@@ -225,16 +227,16 @@
                     send(state.value, s[i], 'END_LIST');
                 }
                 // space
-                else if (st === 'outerList' && (s[i] === " " || s[i] === "\n" || s[i] === "\t")) {
+                else if (st === 'outerList' && isSpace(s[i])) {
                     send(state.value, s[i], 'SPACE');
                 }
                 // boolean
                 else if (st === 'outerList' && s.slice(i, i + 4) === "true" &&
-                    (i + 4 >= s.length || s[i + 4] === " " || s[i + 4] === "\n" || s[i + 4] === "\t" || s[i + 4] === "]")) {
+                    (i + 4 >= s.length || isSpace(s[i + 4]) || s[i + 4] === "]")) {
                     send(state.value, s[i], 'TRUE');
                 }
                 else if (st === 'outerList' && s.slice(i, i + 5) === "false" &&
-                    (i + 5 >= s.length || s[i + 5] === " " || s[i + 5] === "\n" || s[i + 5] === "\t" || s[i + 5] === "]")) {
+                    (i + 5 >= s.length || isSpace(s[i + 5]) || s[i + 5] === "]")) {
                     send(state.value, s[i], 'FALSE');
                 }
                 // comment
@@ -248,14 +250,14 @@
                     send(state.value, s[i], 'END_COMMENT');
                 }
                 // word
-                else if (st === 'outerList' && s[i] !== " " && s[i] !== "\t" && s[i] !== "\n" && s[i] !== "'" && s[i] !== "\"" && s[i] !== "`") {
+                else if (st === 'outerList' && !isSpace(s[i]) && s[i] !== "'" && s[i] !== "\"" && s[i] !== "`") {
                     send(state.value, s[i], 'START_WORD');
                 }
                 else if ((st === 'word' || st === 'wordEtc') &&
-                    (s[i] === " " || s[i] === "\n" || s[i] === "\t" || s[i] === '[' || s[i] === ']')) {
+                    (isSpace(s[i]) || s[i] === '[' || s[i] === ']')) {
                     send(state.value, s[i], 'END_WORD');
                 }
-                else if ((st === 'word' || st === 'wordEtc') && s[i] !== ' ') {
+                else if ((st === 'word' || st === 'wordEtc') && !isSpace(s[i])) {
                     send(state.value, s[i], 'MORE_WORD');
                 }
                 // quoted string
