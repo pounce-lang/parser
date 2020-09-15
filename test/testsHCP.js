@@ -3,8 +3,8 @@ const pinna = require("../bundle.js");
 
 let parser_tests = [
     [`#abc`, []],
-// ];
-// let other_parser_tests = [
+    [` a #abc
+    `, ['a']],
     [`#abc 
     compose #eee `, ['compose']],
     [`a [+ " ="   m ] z`, ['a', ['+', '" ="', 'm'], 'z']],
@@ -13,11 +13,14 @@ let parser_tests = [
     ["'hello world'", [ "'hello world'" ]],
     ['"hello world"', [ '"hello world"' ]],
     ['a b c d', [ 'a', 'b', 'c', 'd' ]],
+    ['a{} b[] c<> d---', [ 'a{}', 'b', [], 'c<>', 'd---' ]],
     ["' '", [ "' '" ]],
     ['" "', [ '" "' ]],
     ["''", [ "''" ]],
     ['""', [ '""' ]],
     ['" " " in the middle " " "', [ '" "', '" in the middle "', '" "' ]],
+    ['" " " in [the] middle " " "', [ '" "', '" in [the] middle "', '" "' ]],
+    ['"[] " " `in` the middle " " []"', [ '"[] "', '" `in` the middle "', '" []"' ]],
     ['"\\\""', [ '"\\\""' ]],
     ["'\\\''", [ "'\\\''" ]],
     ['"\'"', [ '"\'"' ]],
