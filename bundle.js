@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('daggy'), require('arcsecond'), require('path')) :
-  typeof define === 'function' && define.amd ? define(['daggy', 'arcsecond', 'path'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.daggy, global.arcsecond));
-}(this, (function (daggy, arcsecond) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('daggy'), require('arcsecond'), require('path')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'daggy', 'arcsecond', 'path'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.pounceParser = {}, global.daggy, global.arcsecond));
+}(this, (function (exports, daggy, arcsecond) { 'use strict';
 
   const JSONType = daggy.taggedSum('JSON', {
     JBoolean: ['x'],
@@ -52,7 +52,7 @@
     arcsecond.char('~'),
     arcsecond.char('!'),
     arcsecond.char('@'),
-    arcsecond.char('#'),
+    // char('#'),
     arcsecond.char('$'),
     arcsecond.char('%'),
     arcsecond.char('^'),
@@ -66,10 +66,10 @@
     arcsecond.char('?'),
     arcsecond.char('/'),
     arcsecond.char('|'),
+    arcsecond.char('.'),
   ]);
 
   const basicStr = arcsecond.many1(arcsecond.choice([arcsecond.letter, arcsecond.digit, comicSwears])).map(r => r.join(''));
-    //anyCharExcept(str(' ')))
 
 
   const word =  arcsecond.choice([
@@ -90,10 +90,25 @@
     return results.map(a => a.value);
   });
 
+  const comment = arcsecond.sequenceOf([
+      arcsecond.char('#'), 
+      arcsecond.many(arcsecond.anyCharExcept(arcsecond.char('\n'))), 
+      arcsecond.choice([arcsecond.char('\n'), arcsecond.endOfInput])
+    ]).map(r => ([]));
 
 
-  const pounce = sepBySpace(word);
+  const pounce = arcsecond.coroutine(function* () {
+    yield arcsecond.optionalWhitespace;
+    //const program = yield sepBySpace(word);
+    const program = yield arcsecond.many(arcsecond.choice([comment, sepBySpace(word)]));
+    yield arcsecond.optionalWhitespace;
+    return program[0];
+  });
 
-  console.log(JSON.stringify(pounce.run('[  a] a2 [] [b* [-a  -123  ] ]')));
+  // // console.log(JSON.stringify(pounce.run(' [  a] a2 [] [b* [-a  -123  ] ]   ')));
+
+  exports.pounce = pounce;
+
+  Object.defineProperty(exports, '__esModule', { value: true });
 
 })));

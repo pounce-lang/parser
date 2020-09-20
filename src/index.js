@@ -17,6 +17,7 @@ import {
   choice,
   coroutine,
   either,
+  endOfInput,
   letter,
   letters,
   possibly,
@@ -47,7 +48,7 @@ const comicSwears = choice([
   char('~'),
   char('!'),
   char('@'),
-  char('#'),
+  // char('#'),
   char('$'),
   char('%'),
   char('^'),
@@ -61,6 +62,7 @@ const comicSwears = choice([
   char('?'),
   char('/'),
   char('|'),
+  char('.'),
 ]);
 
 const basicStr = many1(choice([letter, digit, comicSwears])).map(r => r.join(''));
@@ -84,8 +86,19 @@ const sepBySpace = valueParser => coroutine(function* () {
   return results.map(a => a.value);
 });
 
+const comment = sequenceOf([
+    char('#'), 
+    many(anyCharExcept(char('\n'))), 
+    choice([char('\n'), endOfInput])
+  ]).map(r => ([]));
 
 
-const pounce = sepBySpace(word)
+export const pounce = coroutine(function* () {
+  yield optionalWhitespace;
+  //const program = yield sepBySpace(word);
+  const program = yield many(choice([comment, sepBySpace(word)]));
+  yield optionalWhitespace;
+  return program[0];
+});
 
-console.log(JSON.stringify(pounce.run('[  a] a2 [] [b* [-a  -123  ] ]')));
+// // console.log(JSON.stringify(pounce.run(' [  a] a2 [] [b* [-a  -123  ] ]   ')));
