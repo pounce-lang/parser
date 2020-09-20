@@ -1,306 +1,99 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@xstate/fsm')) :
-    typeof define === 'function' && define.amd ? define(['exports', '@xstate/fsm'], factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.pounceParser = {}, global.fsm));
-}(this, (function (exports, fsm) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('daggy'), require('arcsecond'), require('path')) :
+  typeof define === 'function' && define.amd ? define(['daggy', 'arcsecond', 'path'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.daggy, global.arcsecond));
+}(this, (function (daggy, arcsecond) { 'use strict';
 
-    const isSpace = char => char === " " || char === "\n" || char === "\t";
+  const JSONType = daggy.taggedSum('JSON', {
+    JBoolean: ['x'],
+    JNumber: ['x'],
+    JNull: [],
+    JArray: ['x'],
+    JString: ['x'],
+    JObject: ['x'],
+    JKeyValuePair: ['x', 'y'],
+  });
 
-    const parse = pounceSrc => {
+  const times = str => n => Array.from({ length: n }, () => str).join('');
+  const tabs = times('  ');
 
-        const parserMachine = fsm.createMachine({
-            id: 'parser',
-            initial: 'outerList',
-            context: {
-                s: pounceSrc,
-                i: 0,
-                currentWord: '',
-                currentString: '',
-                subListLevel: 0,
-                ast: [[]],
-                success: null,
-                line: 1,
-                colOffset: 0
-            },
-            states: {
-                outerList: {
-                    on: {
-                        TRUE: 'true',
-                        FALSE: 'false',
-                        START_WORD: 'word',
-                        START_STRING: 'string',
-                        START_LIST: 'pushList',
-                        END_LIST: 'popList',
-                        SPACE: 'space',
-                        COMMENT: 'comment',
-                        EOF: 'eof'
-                    }
-                },
-                true: {
-                    entry: fsm.assign({
-                        i: ctx => ctx.i + 4,
-                        ast: (c) => {
-                            let level = c.subListLevel;
-                            let astLevel = c.ast[level];
-                            astLevel = [...astLevel, true];
-                            return [...c.ast.slice(0, -1), astLevel];
-                        }
-                    }),
-                    on: { BACK: 'outerList', EOF: 'eof' }
-                },
-                false: {
-                    entry: fsm.assign({
-                        i: ctx => ctx.i + 5,
-                        ast: (c) => {
-                            let level = c.subListLevel;
-                            let astLevel = c.ast[level];
-                            astLevel = [...astLevel, false];
-                            return [...c.ast.slice(0, -1), astLevel];
-                        }
-                    }),
-                    on: { BACK: 'outerList', EOF: 'eof' }
-                },
+  JSONType.prototype.toString = function(l = 0) {
+    return this.cata({
+      JBoolean: x => `${tabs(l)}Boolean(${x.toString()})`,
+      JNumber: x => `${tabs(l)}Number(${x.toString()})`,
+      JNull: () => `${tabs(l)}Null`,
+      JArray: x =>
+        `${tabs(l)}Array(\n${x.map(e => e.toString(l + 1)).join(',\n')}\n${tabs(l)})`,
+      JString: x => `${tabs(l)}String(${x.toString()})`,
+      JObject: x =>
+        `${tabs(l)}Object(\n${x.map(e => e.toString(l + 1)).join(',\n')}\n${tabs(l)})`,
+      JKeyValuePair: (x, y) =>
+        `${tabs(l)}KeyValuePair(\n${x.toString(l + 1)},\n${y.toString(l + 1)}\n${tabs(l)})`,
+    });
+  };
 
-                word: {
-                    entry: fsm.assign({
-                        currentWord: ctx => ctx.currentWord + ctx.s[ctx.i],
-                        i: ctx => ctx.i + 1
-                    }),
-                    on: {
-                        MORE_WORD: 'wordEtc',
-                        END_WORD: 'wordEnd',
-                        EOF: 'wordEnd'
-                    }
-                },
-                wordEtc: {
-                    entry: fsm.assign({
-                        currentWord: ctx => ctx.currentWord + ctx.s[ctx.i],
-                        i: ctx => ctx.i + 1
-                    }),
-                    on: {
-                        MORE_WORD: 'wordEtc',
-                        END_WORD: 'wordEnd',
-                        EOF: 'wordEnd'
-                    }
-                },
-                wordEnd: {
-                    entry: fsm.assign({
-                        ast: (c) => {
-                            let level = c.subListLevel;
-                            let astLevel = c.ast[level];
-                            astLevel = [...astLevel, c.currentWord];
-                            return [...c.ast.slice(0, -1), astLevel];
-                        },
-                        currentWord: () => ('')
-                    }),
-                    on: { REC_WORD: 'outerList', EOF: 'eof' }
-                },
-                pushList: {
-                    entry: fsm.assign({
-                        subListLevel: (c) => c.subListLevel + 1,
-                        ast: (c) => {
-                            let level = c.subListLevel + 1;
-                            return [...c.ast, []];
-                        },
-                        i: ctx => ctx.i + 1
-                    }),
-                    on: { BACK: 'outerList' }
-                },
-                popList: {
-                    entry: fsm.assign({
-                        subListLevel: (c) => c.subListLevel - 1,
-                        i: ctx => ctx.i + 1,
-                        ast: (c) => {
-                            let last = c.ast.pop();
-                            let len = c.ast.length;
-                            if (len < 1) {
-                                return [c.i, last, `ERROR: missmatched ']' square bracket on line ${c.line}, column ${(c.i - c.colOffset)}`, last];
-                            }
-                            c.ast[len - 1].push(last);
-                            return c.ast;
-                        },
-                    }),
-                    on: {
-                        BACK: 'outerList',
-                        EOF: 'eof'
-                    }
-                },
-                string: {
-                    entry: fsm.assign({
-                        currentString: ctx => ctx.currentString + ctx.s[ctx.i],
-                        i: ctx => ctx.i + 1
-                    }),
-                    on: {
-                        MORE_STRING: 'stringEtc',
-                        END_STRING: 'stringEnd',
-                        EOF: 'stringEnd'
-                    }
-                },
-                stringEtc: {
-                    entry: fsm.assign({
-                        currentString: ctx => ctx.currentString + ctx.s[ctx.i],
-                        i: ctx => ctx.i + 1
-                    }),
-                    on: {
-                        MORE_STRING: 'stringEtc',
-                        END_STRING: 'stringEnd',
-                        EOF: 'stringEnd'
-                    }
-                },
-                stringEnd: {
-                    entry: fsm.assign({
-                        ast: (c) => {
-                            let level = c.subListLevel;
-                            let astLevel = c.ast[level];
-                            astLevel = [...astLevel, c.currentString + c.currentString[0]];
-                            return [...c.ast.slice(0, -1), astLevel];
-                        },
-                        currentString: () => (''),
-                        i: ctx => ctx.i + 1
-                    }),
-                    on: { REC_STRING: 'outerList', EOF: 'eof' }
-                },
-                space: {
-                    entry: fsm.assign({
-                        i: ctx => ctx.i + 1,
-                        line: c => c.s[c.i] === '\n' ? c.line + 1 : c.line,
-                        colOffset: c => c.s[c.i] === '\n' ? c.i : c.colOffset
-                    }),
-                    on: {
-                        END_SPACE: 'outerList',
-                        SPACE: 'outerList',
-                        EOF: 'eof'
-                    }
-                },
-                comment: {
-                    entry: fsm.assign({
-                        i: ctx => ctx.i + 1,
-                        line: c => c.s[c.i] === '\n' ? c.line + 1 : c.line,
-                        colOffset: c => c.s[c.i] === '\n' ? c.i : c.colOffset
-                    }),
-                    on: {
-                        END_COMMENT: 'outerList',
-                        COMMENT: 'comment',
-                        EOF: 'eof'
-                    }
-                },
-                eof: {
-                    entry: fsm.assign({
-                        success: (c) => (c.ast.length === 1 && c.subListLevel === 0),
-                        ast: (c) => {
-                            // console.log("fin");
-                            if (c.ast.length === 1 && c.subListLevel === 0) {
-                                return c.ast[0];
-                            }
-                            return c.ast;
-                        }
-                    })
-                }
-            }
-        });
+  const JBoolean = JSONType.JBoolean;
+  const JNumber = JSONType.JNumber;
+  const JArray = JSONType.JArray;
+  const JString = JSONType.JString;
+  const JObject = JSONType.JObject;
+  const JKeyValuePair = JSONType.JKeyValuePair;
 
-        const parserService = fsm.interpret(parserMachine).start();
+  const list = arcsecond.coroutine(function* () {
+    yield arcsecond.char('[');
+    yield arcsecond.optionalWhitespace;
+    const words = yield sepBySpace(word);
+    yield arcsecond.optionalWhitespace;
+    yield arcsecond.char(']');
+    return words;
+  });
 
-        const send = (state, letter, e) => {
-            // console.log(`from ${state} letter ${letter} send event ${e}`);
-            parserService.send(e);
-        };
-        let lastAst = [];
-        let lastSuccess = null;
+  const comicSwears = arcsecond.choice([
+    arcsecond.char('~'),
+    arcsecond.char('!'),
+    arcsecond.char('@'),
+    arcsecond.char('#'),
+    arcsecond.char('$'),
+    arcsecond.char('%'),
+    arcsecond.char('^'),
+    arcsecond.char('&'),
+    arcsecond.char('*'),
+    arcsecond.char('_'),
+    arcsecond.char('-'),
+    arcsecond.char('+'),
+    arcsecond.char('='),
+    arcsecond.char('.'),
+    arcsecond.char('?'),
+    arcsecond.char('/'),
+    arcsecond.char('|'),
+  ]);
 
-        parserService.subscribe((state) => {
-            // console.log(JSON.stringify(state.context), state.changed, state.value);
-            const st = state.value;
-            const { s, i, ast, currentString, success } = state.context;
-            lastAst = ast;
-            lastSuccess = success;
+  const basicStr = arcsecond.many1(arcsecond.choice([arcsecond.letter, arcsecond.digit, comicSwears])).map(r => r.join(''));
+    //anyCharExcept(str(' ')))
 
-            if (state.changed !== false) {
-                if ((st !== 'eof' && s.length <= i) || typeof ast[0] === 'number') {
-                    send(state.value, 'EOF', 'EOF');
-                }
-                // list
-                else if (st === 'outerList' && s[i] === "[") {
-                    send(state.value, s[i], 'START_LIST');
-                }
-                else if (st === 'outerList' && s[i] === "]") {
-                    send(state.value, s[i], 'END_LIST');
-                }
-                // space
-                else if (st === 'outerList' && isSpace(s[i])) {
-                    send(state.value, s[i], 'SPACE');
-                }
-                // boolean
-                else if (st === 'outerList' && s.slice(i, i + 4) === "true" &&
-                    (i + 4 >= s.length || isSpace(s[i + 4]) || s[i + 4] === "]")) {
-                    send(state.value, s[i], 'TRUE');
-                }
-                else if (st === 'outerList' && s.slice(i, i + 5) === "false" &&
-                    (i + 5 >= s.length || isSpace(s[i + 5]) || s[i + 5] === "]")) {
-                    send(state.value, s[i], 'FALSE');
-                }
-                // comment
-                else if (st === 'outerList' && s[i] === "#") {
-                    send(state.value, s[i], 'COMMENT');
-                }
-                else if (st === 'comment' && s[i] !== "\n") {
-                    send(state.value, s[i], 'COMMENT');
-                }
-                else if (st === 'comment' && s[i] === "\n") {
-                    send(state.value, s[i], 'END_COMMENT');
-                }
-                // word
-                else if (st === 'outerList' && !isSpace(s[i]) && s[i] !== "'" && s[i] !== "\"" && s[i] !== "`") {
-                    send(state.value, s[i], 'START_WORD');
-                }
-                else if ((st === 'word' || st === 'wordEtc') &&
-                    (isSpace(s[i]) || s[i] === '[' || s[i] === ']')) {
-                    send(state.value, s[i], 'END_WORD');
-                }
-                else if ((st === 'word' || st === 'wordEtc') && !isSpace(s[i])) {
-                    send(state.value, s[i], 'MORE_WORD');
-                }
-                // quoted string
-                else if (st === 'outerList' && (s[i] === "'" || s[i] === "\"" || s[i] === "`")) {
-                    send(state.value, s[i], 'START_STRING');
-                }
-                else if ((st === 'string' || st === 'stringEtc') &&
-                    s[i] === currentString[0] && !(st === 'stringEtc' && s[i - 1] === '\\')) {
-                    send(state.value, s[i], 'END_STRING');
-                }
-                else if ((st === 'string' || st === 'stringEtc') &&
-                    !(s[i] === currentString[0] && !(st === 'stringEtc' && s[i - 1] === '\\'))) {
-                    send(state.value, s[i], 'MORE_STRING');
-                }
-                // transient states
-                else if (st === 'space') {
-                    send(state.value, s[i], 'END_SPACE');
-                }
-                else if (st === 'wordEnd') {
-                    send(state.value, s[i], 'REC_WORD');
-                }
-                else if (st === 'stringEnd') {
-                    send(state.value, s[i], 'REC_STRING');
-                }
-                else if (st === 'pushList') {
-                    send(state.value, s[i], 'BACK');
-                }
-                else if (st === 'popList') {
-                    send(state.value, s[i], 'BACK');
-                }
-                else if (st === 'true' || st === 'false') {
-                    send(state.value, s[i], 'BACK');
-                }
-            }
-            else {
-                return { ast, success };
-            }
-        });
-        return { ast: lastAst, success: lastSuccess };
-    };
 
-    exports.parse = parse;
+  const word =  arcsecond.choice([
+    basicStr,
+    list
+  ]);
 
-    Object.defineProperty(exports, '__esModule', { value: true });
+  // util 
+  const sepBySpace = valueParser => arcsecond.coroutine(function* () {
+    const results = [];
+    while (true) {
+      const value = yield arcsecond.either(valueParser);
+      if (value.isError) break;
+      results.push(value);
+      const sep = yield arcsecond.either(arcsecond.whitespace);
+      if (sep.isError) break;
+    }
+    return results.map(a => a.value);
+  });
+
+
+
+  const pounce = sepBySpace(word);
+
+  console.log(JSON.stringify(pounce.run('[  a] a2 [] [b* [-a  -123  ] ]')));
 
 })));
