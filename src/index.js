@@ -1,17 +1,7 @@
-
-import {
-  JBoolean,
-  JNumber,
-  JNull,
-  JArray,
-  JString,
-  JObject,
-  JKeyValuePair,
-} from './json.type';
-
 import {
   anyCharExcept,
   char,
+  regex,
   sequenceOf,
   str,
   choice,
@@ -30,10 +20,11 @@ import {
   between,
   anyOfString,
   recursiveParser,
+  tapParser,
   whitespace,
   many1,
 } from 'arcsecond';
-import { join } from 'path';
+
 
 const list = coroutine(function* () {
   yield char('[');
@@ -65,12 +56,19 @@ const comicSwears = choice([
   char('.'),
 ]);
 
-const basicStr = many1(choice([letter, digit, comicSwears])).map(r => r.join(''));
-
+const basicStr = sequenceOf([
+  optionalWhitespace,
+  many1(choice([
+    letter, 
+    digit, 
+    comicSwears
+  ])).map(r => r.join(''))
+]).map(r => r[1]);
 
 const word =  choice([
+  //tapParser(log(2)),
+  list,
   basicStr,
-  list
 ])
 
 // util 
@@ -85,13 +83,15 @@ const sepBySpace = valueParser => coroutine(function* () {
   }
   return results.map(a => a.value);
 });
-
+const log = m1 => m2 => console.log(m1, m2);
 const comment = sequenceOf([
-    char('#'), 
-    many(anyCharExcept(char('\n'))), 
-    choice([char('\n'), endOfInput])
+    char('#'),
+    // tapParser(log(1)),
+    many(anyCharExcept(char('\n'))),
+    tapParser(log(1)),
+    // choice([char('\n'), endOfInput]),
+    // tapParser(log(2)),
   ]).map(r => ([]));
-
 
 export const pounce = coroutine(function* () {
   yield optionalWhitespace;

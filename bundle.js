@@ -1,43 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('daggy'), require('arcsecond'), require('path')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'daggy', 'arcsecond', 'path'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.pounceParser = {}, global.daggy, global.arcsecond));
-}(this, (function (exports, daggy, arcsecond) { 'use strict';
-
-  const JSONType = daggy.taggedSum('JSON', {
-    JBoolean: ['x'],
-    JNumber: ['x'],
-    JNull: [],
-    JArray: ['x'],
-    JString: ['x'],
-    JObject: ['x'],
-    JKeyValuePair: ['x', 'y'],
-  });
-
-  const times = str => n => Array.from({ length: n }, () => str).join('');
-  const tabs = times('  ');
-
-  JSONType.prototype.toString = function(l = 0) {
-    return this.cata({
-      JBoolean: x => `${tabs(l)}Boolean(${x.toString()})`,
-      JNumber: x => `${tabs(l)}Number(${x.toString()})`,
-      JNull: () => `${tabs(l)}Null`,
-      JArray: x =>
-        `${tabs(l)}Array(\n${x.map(e => e.toString(l + 1)).join(',\n')}\n${tabs(l)})`,
-      JString: x => `${tabs(l)}String(${x.toString()})`,
-      JObject: x =>
-        `${tabs(l)}Object(\n${x.map(e => e.toString(l + 1)).join(',\n')}\n${tabs(l)})`,
-      JKeyValuePair: (x, y) =>
-        `${tabs(l)}KeyValuePair(\n${x.toString(l + 1)},\n${y.toString(l + 1)}\n${tabs(l)})`,
-    });
-  };
-
-  const JBoolean = JSONType.JBoolean;
-  const JNumber = JSONType.JNumber;
-  const JArray = JSONType.JArray;
-  const JString = JSONType.JString;
-  const JObject = JSONType.JObject;
-  const JKeyValuePair = JSONType.JKeyValuePair;
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('arcsecond')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'arcsecond'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.pounceParser = {}, global.arcsecond));
+}(this, (function (exports, arcsecond) { 'use strict';
 
   const list = arcsecond.coroutine(function* () {
     yield arcsecond.char('[');
@@ -69,12 +34,19 @@
     arcsecond.char('.'),
   ]);
 
-  const basicStr = arcsecond.many1(arcsecond.choice([arcsecond.letter, arcsecond.digit, comicSwears])).map(r => r.join(''));
-
+  const basicStr = arcsecond.sequenceOf([
+    arcsecond.optionalWhitespace,
+    arcsecond.many1(arcsecond.choice([
+      arcsecond.letter, 
+      arcsecond.digit, 
+      comicSwears
+    ])).map(r => r.join(''))
+  ]).map(r => r[1]);
 
   const word =  arcsecond.choice([
+    //tapParser(log(2)),
+    list,
     basicStr,
-    list
   ]);
 
   // util 
@@ -89,13 +61,15 @@
     }
     return results.map(a => a.value);
   });
-
+  const log = m1 => m2 => console.log(m1, m2);
   const comment = arcsecond.sequenceOf([
-      arcsecond.char('#'), 
-      arcsecond.many(arcsecond.anyCharExcept(arcsecond.char('\n'))), 
-      arcsecond.choice([arcsecond.char('\n'), arcsecond.endOfInput])
+      arcsecond.char('#'),
+      // tapParser(log(1)),
+      arcsecond.many(arcsecond.anyCharExcept(arcsecond.char('\n'))),
+      arcsecond.tapParser(log(1)),
+      // choice([char('\n'), endOfInput]),
+      // tapParser(log(2)),
     ]).map(r => ([]));
-
 
   const pounce = arcsecond.coroutine(function* () {
     yield arcsecond.optionalWhitespace;
