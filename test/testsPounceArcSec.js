@@ -6,13 +6,14 @@ let parser_tests = [
     // a`, ['a']],
     [`#abc\n#def\n#ghi\n#jkli\n`, []],
     [`a#abc\n#def`, ['a']],
-    // [` a#abc\n\n b`, ['a', 'b']],
+    [` a#abc\n\n b`, ['a', 'b']],
     // [`
 
 
     // compose #eee `, ['compose']],
     // // [`a [+ " ="   m ] z`, ['a', ['+', '" ="', 'm'], 'z']],
     ['hello world', ['hello', 'world']],
+    ['hello\nworld', ['hello', 'world']],
     // ['helloworld', [ 'helloworld' ]],
     // // ["'hello world'", [ "'hello world'" ]],
     // // ['"hello world"', [ '"hello world"' ]],

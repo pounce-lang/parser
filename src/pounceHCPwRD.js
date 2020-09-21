@@ -2,7 +2,7 @@
     function id(x) { return x[0]; }
 
 
-
+// a hand coded parser with recursive decent
 
 const parse = s => {
     let ast = [];

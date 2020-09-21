@@ -26,17 +26,11 @@ pounce    ->  pinna_pl | pinna_empty
 
   number    ->  float1 | float2 | float3 | integer
   float1    ->  "-"? [0-9]+ "." [0-9]+ end_of_word  
-  float2    ->  "-"? "." [0-9]+ end_of_word        
-  float3    ->  "-"? [0-9]+ "." end_of_word        
-  integer   ->  "-"? [0-9]+ end_of_word            
+  float2    ->  "-"? "." [0-9]+ end_of_word 
+  float3    ->  "-"? [0-9]+ "." end_of_word 
+  integer   ->  "-"? [0-9]+ end_of_word 
 
   end_of_word -> &_ | &"[" | &"]" | &"{" | &"}" | [$]+
 
-
   comment -> "#" [^\n]*
   end_of_string -> [$]  
-
-# # # # tried many interations of a blacklist word definition rules # # # #
-#  word      -> word_aux* 
-#  word   ->  (!nonword .)+
-#  nonword   ->  _ | "[" | "]" | "{" | ":" | "}"
