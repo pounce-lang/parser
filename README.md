@@ -16,5 +16,11 @@ rollup src/pounceHCPwSt.js --file bundle.js --format umd --name "pounceParser"
 ```
 
 Then I read an interesting comment on another parsing realted blog and it simply asked, "Have you looked into parser combinators?"  Well no I haden't and so, zoom off I go again. I quickly found Arcsecond, so cool. At this point, I will have to try it. Timing to be determined.
+```
+rollup src/pounceArcsec.js --file bundle.js --format umd --name "pounceParser"
+```
+A whole other way of looking at parsing could be to transform your input into a more palettable string that would be much easier to parse. If comments the thing that really warps the grammar of the parser into a twist, then a pre-processing removal of all comments (or maybe a transformation to a more easily parsed form) could really save you from having to give up on using your favorite PG or PC toolkit.
+
+
 
 May the best parser suit of tools win and if they all fail, it's me and too many choices, not all parsers are junk. Between nearley, pegjs, canopy, hand-coded & xstate/fsm and arcsecond, two or three will be successful, well canopy is the pounce v1 parser, so that is already as successful as this whole endever, humpf. Hey, I keep building it for fun and it does not matter who does or does not see the fun that is being had. 
