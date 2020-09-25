@@ -2,7 +2,7 @@
 A Pounce parser
 
 
-Although, I love the (nearley parser generator)[https://nearley.js.org/] and the (Canopy parser)[http://canopy.jcoglan.com/], just like all the generators I have tried, they did not provide a mantainable solution for my parsing needs. I will try them again and hopfully regain all their bennefits in the future. After all, I miss the rr diagrams that nearley makes, amoung other nicaties and canopy gives you four languages to run in. I am leaning these build commands as a reminder to com back to it someday sooner than never.
+Although, I love the [https://nearley.js.org/](nearley parser generator) and the [Canopy parser](http://canopy.jcoglan.com/)  (http://canopy.jcoglan.com/)[Canopy parser], just like all the generators I have tried, they did not provide a mantainable solution for my parsing needs. I will try them again and hopfully regain all their bennefits in the future. After all, I miss the rr diagrams that nearley makes, amoung other nicaties and canopy gives you four languages to run in. I am leaning these build commands as a reminder to com back to it someday sooner than never.
 ```
 npx nearleyc src/pounce.ne -o build/pounceNe.js
 npx nearley-test -i " a 5 [ 5 a ]" build/pounceNe.js
