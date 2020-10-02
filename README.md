@@ -2,13 +2,13 @@
 A Pounce parser
 
 
-Although, I love the [Nearley parser generator](https://nearley.js.org/) and the [Canopy parser generator](http://canopy.jcoglan.com/), but just like all the generators I have tried, they did not provide a mantainable solution for my parsing needs. I will try them again and hopfully regain all their bennefits in the future. After all, I miss the rr diagrams that nearley makes, amoung other nicaties and canopy gives you four languages to run in. I am leaning these build commands as a reminder to com back to it someday sooner than never.
+Although, I love the [Nearley parser generator](https://nearley.js.org/) and the [Canopy parser generator](http://canopy.jcoglan.com/), but just like all the generators I have tried, they did not provide a mantainable solution for my parsing needs. I will try them again and hopfully regain all their bennefits of PEG files in the future. After all, I miss the rr diagrams that nearley makes, amoung other nicaties and canopy gives you four languages to run in. I am leaving these build commands as a reminder to com back to it someday sooner than never.
 ```
 npx nearleyc src/pounce.ne -o build/pounceNe.js
 npx nearley-test -i " a 5 [ 5 a ]" build/pounceNe.js
 ```
 
-After reading a corroborating blog post that confirmed that my 'troubles' with parser generators was not an
+After reading a corroborating [blog post (from way back in 2012)](https://mortoray.com/2012/07/20/why-i-dont-use-a-parser-generator/) that confirmed that my 'troubles' with parser generators. I realized that this was not an
 isolated event attributable to an incompitant developer, incapable of handling the usual level of chaos that a typical peg + parser generator requires, I concluded that, at least it wasn't me. Right? Hmmm, maybe, but the conclusion of this afferming article was that you're better off writing a hand coded parser, great! Off I go. So with not too much of a plan, other than we know there'll be some recursive-decent for the part that handles parsing nested lists. Going great guns until that feeling creeped back in, ohhh nooo chaos, so I looked around and grabbed one of the best tools I have ever used. It gets a project back on track every time, back to organized, back to a structure with separation of concerns, An all around rock solid, case hardened, methodology, ummm talking state machines. Yea xstate is a nice one and it is working well. 
 
 ```
